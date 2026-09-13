@@ -33,6 +33,7 @@ docker compose up --build
 - `POST /api/query`：`{"question":"光伏组件的衰减率是多少？"}`
 - `GET /api/health`：服务与索引状态
 - `GET /api/documents`：知识库文档清单
+- `POST /api/reindex`：手动重建 FAISS 索引
 - `GET /api/history/{session_id}`：多轮会话记录
 - `POST /api/query/stream`：SSE 流式回答
 - `POST /api/evaluate`：运行内置检索评估集

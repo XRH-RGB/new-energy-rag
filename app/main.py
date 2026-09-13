@@ -71,6 +71,9 @@ def init_db() -> None:
           id TEXT PRIMARY KEY, question TEXT NOT NULL, expected_source TEXT,
           top_source TEXT, score REAL, passed INTEGER NOT NULL, created_at TEXT NOT NULL);
         """)
+        built_in = DATA / "knowledge.md"
+        if built_in.exists():
+            conn.execute("INSERT OR IGNORE INTO documents(id,filename,source,file_type,size,status,created_at) VALUES(?,?,?,?,?,?,?)", ("builtin-knowledge", built_in.name, built_in.name, "md", built_in.stat().st_size, "indexed", now()))
 
 
 def embed(text: str) -> np.ndarray:
@@ -215,6 +218,11 @@ def documents() -> dict[str, Any]:
     with db() as conn:
         rows = [dict(row) for row in conn.execute("SELECT * FROM documents ORDER BY created_at DESC")]
     return {"items": rows}
+
+
+@app.post("/api/reindex")
+def reindex() -> dict[str, Any]:
+    return {"message": "索引重建完成", "chunks": rebuild_index()}
 
 
 @app.post("/api/ingest")
