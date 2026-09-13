@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>新能源知识库 · RAG 工作台</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<header><div><span class="eyebrow">NEW ENERGY · KNOWLEDGE OS</span><h1>新能源知识库智能问答</h1><p>基于 FastAPI · LangChain · FAISS 的可解释 RAG 工作台</p></div><a class="flow-link" href="/flow" target="_blank">查看 business-flow 流程 ↗</a></header>
+<main>
+  <nav><button class="tab active" data-tab="chat">知识问答</button><button class="tab" data-tab="knowledge">知识库</button><button class="tab" data-tab="analysis">检索分析</button></nav>
+  <section id="chat" class="panel"><div id="messages" class="messages"><div class="welcome"><b>你好，我是新能源知识助手。</b><p>可以询问光伏、风电、储能、氢能的技术知识。回答会显示证据来源和检索分析。</p><div class="suggestions"><button>光伏组件的衰减率是多少？</button><button>储能系统需要哪些安全配置？</button><button>PEM 电解适合什么场景？</button></div></div></div><form id="queryForm"><input id="question" placeholder="输入新能源技术问题…" autocomplete="off" required><button>发送 ↑</button></form></section>
+  <section id="knowledge" class="panel hidden"><div class="section-head"><div><h2>知识库管理</h2><p>导入 Markdown、TXT 或 PDF，系统会自动切分并建立 FAISS 索引。</p></div><label class="upload">＋ 导入文档<input id="file" type="file" accept=".md,.txt,.pdf"></label></div><div id="docs" class="docs"></div></section>
+  <section id="analysis" class="panel hidden"><div class="section-head"><div><h2>系统分析</h2><p>查看当前索引规模、会话数量和混合检索配置。</p></div><button id="evaluate" class="secondary">运行检索评估</button></div><div id="stats" class="stats"></div><pre id="evaluation" class="evaluation"></pre></section>
+</main><script src="/static/app.js"></script>
+</body></html>
