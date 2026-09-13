@@ -48,12 +48,29 @@ def rebuild() -> int:
     faiss.write_index(index, str(INDEX_FILE)); META_FILE.write_text(json.dumps([{"text": d.page_content, "source": d.metadata.get("source", "unknown")} for d in docs], ensure_ascii=False), encoding="utf-8")
     return len(docs)
 
+def classify_intent(question: str) -> str:
+    q = question.lower()
+    rules = {
+        "光伏": "光伏发电",
+        "组件": "光伏发电",
+        "风机": "风电运维",
+        "齿轮箱": "风电运维",
+        "储能": "储能安全",
+        "电池": "储能安全",
+        "氢": "氢能制备",
+        "电解": "氢能制备",
+    }
+    for word, intent in rules.items():
+        if word in q:
+            return intent
+    return "新能源综合咨询"
+
 def retrieve(question: str, k: int = 4):
     if not INDEX_FILE.exists(): rebuild()
     index = faiss.read_index(str(INDEX_FILE)); meta = json.loads(META_FILE.read_text(encoding="utf-8")) if META_FILE.exists() else []
     if not meta: return []
-    _, ids = index.search(np.array([embed(question)]), min(k, len(meta)))
-    return [meta[i] for i in ids[0] if i >= 0]
+    scores, ids = index.search(np.array([embed(question)]), min(k, len(meta)))
+    return [{**meta[i], "score": round(float(scores[0][pos]), 4)} for pos, i in enumerate(ids[0]) if i >= 0]
 
 class Query(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
@@ -88,7 +105,9 @@ async def ingest(file: UploadFile = File(...)):
 @app.post("/api/query")
 def query(body: Query):
     hits = retrieve(body.question, body.top_k)
-    if not hits: return {"answer": "知识库暂无相关内容。", "citations": [], "flow": []}
+    intent = classify_intent(body.question)
+    if not hits:
+        return {"answer": "知识库暂无相关内容。", "citations": [], "flow": [], "analysis": {"intent": intent, "retrieved_chunks": 0, "confidence": 0, "explanation": "没有找到可作为依据的知识片段。"}}
     context = "\n\n".join(h["text"] for h in hits)
     answer = "基于知识库检索结果：\n" + context
     if os.getenv("OPENAI_API_KEY"):
@@ -97,4 +116,5 @@ def query(body: Query):
             answer = ChatOpenAI(model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"), temperature=0).invoke(f"请仅根据资料回答问题并注明依据。\n资料：{context}\n问题：{body.question}").content
         except Exception:
             pass
-    return {"answer": answer, "citations": [{"source": h["source"], "snippet": h["text"][:160]} for h in hits], "flow": ["intent", "retrieve", "generate", "cite"]}
+    confidence = round(max(0.0, min(1.0, (hits[0]["score"] + 1) / 2)), 2)
+    return {"answer": answer, "citations": [{"source": h["source"], "snippet": h["text"][:160], "score": h["score"]} for h in hits], "flow": ["intent", "retrieve", "generate", "cite"], "analysis": {"intent": intent, "retrieved_chunks": len(hits), "confidence": confidence, "explanation": "先按问题关键词识别主题，再用 FAISS 相似度召回片段，最后基于召回内容生成答案并保留引用。"}}

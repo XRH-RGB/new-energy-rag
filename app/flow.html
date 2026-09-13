@@ -1,3 +1,4 @@
 <!doctype html><meta charset="utf-8"><title>新能源 RAG 流程</title>
 <style>body{font:16px system-ui;max-width:900px;margin:40px auto;background:#f4f8f7;color:#173b36}.flow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.node{padding:20px;border-radius:12px;background:#d8f3e8;border:1px solid #7bc9aa}.arrow{font-size:26px}</style>
 <h1>新能源知识库智能问答</h1><p>沿用 business-flow.html 的业务流程</p><div class=flow><div class=node>用户提问</div><div class=arrow>→</div><div class=node>意图识别</div><div class=arrow>→</div><div class=node>FAISS 检索</div><div class=arrow>→</div><div class=node>LangChain 生成</div><div class=arrow>→</div><div class=node>引用溯源</div></div>
+<h2>解释与分析</h2><p>系统先识别光伏、风电、储能或氢能主题，再从 FAISS 向量索引召回相关片段。回答同时展示来源、片段相似度和检索置信度，便于复核答案依据。</p>
